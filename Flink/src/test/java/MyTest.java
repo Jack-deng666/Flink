@@ -14,7 +14,7 @@ public class MyTest {
 //            ListTopicsResult result = KafkaAdminClient.create(pro).listTopics();
 //            KafkaFuture<Set<String>> set = result.names();
 //            System.out.println(set.get());
-            System.out.println(0);
+            System.out.println(66);
 
         }
 
