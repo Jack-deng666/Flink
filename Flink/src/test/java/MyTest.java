@@ -9,11 +9,13 @@ import java.util.concurrent.ExecutionException;
 public class MyTest {
 
         public static void main(String[] args) throws InterruptedException, ExecutionException {
-            Properties pro = new Properties();
-            pro.put("bootstrap.servers", "10.0.0.40:9092");
-            ListTopicsResult result = KafkaAdminClient.create(pro).listTopics();
-            KafkaFuture<Set<String>> set = result.names();
-            System.out.println(set.get());
+//            Properties pro = new Properties();
+//            pro.put("bootstrap.servers", "10.0.0.40:9092");
+//            ListTopicsResult result = KafkaAdminClient.create(pro).listTopics();
+//            KafkaFuture<Set<String>> set = result.names();
+//            System.out.println(set.get());
+            System.out.println(0);
+
         }
 
     }
