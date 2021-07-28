@@ -8,7 +8,6 @@ import org.apache.flink.streaming.connectors.redis.RedisSink;
 import org.apache.flink.streaming.connectors.redis.common.config.FlinkJedisPoolConfig;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommand;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisCommandDescription;
-import org.apache.flink.streaming.connectors.redis.common.mapper.RedisDataType;
 import org.apache.flink.streaming.connectors.redis.common.mapper.RedisMapper;
 
 public class ToRedis {
@@ -16,8 +15,8 @@ public class ToRedis {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         env.setParallelism(1);
-        DataStreamSource<String> intputData = env.readTextFile("src/main/resources/seasor.txt");
-        DataStream<SensorReading> dataStream = intputData.map(line -> {
+        DataStreamSource<String> inputData = env.readTextFile("src/main/resources/sensor.txt");
+        DataStream<SensorReading> dataStream = inputData.map(line -> {
             String[] field = line.split(",");
             return new SensorReading(field[0], new Long(field[1]), new Double(field[2]));
         });

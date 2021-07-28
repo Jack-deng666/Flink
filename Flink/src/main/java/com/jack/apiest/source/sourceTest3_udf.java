@@ -2,7 +2,6 @@ package com.jack.apiest.source;
 
 import com.jack.apiest.beans.SensorReading;
 import org.apache.flink.streaming.api.datastream.DataStream;
-import org.apache.flink.streaming.api.datastream.DataStreamSource;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.source.SourceFunction;
 
@@ -43,7 +42,7 @@ public class sourceTest3_udf {
                     ctx.collect(new SensorReading(sensorId, System.currentTimeMillis(), nexTemp));
                 }
                 // 控制台输出等待1S
-                Thread.sleep(1000L);
+                Thread.sleep(500L);
 
 
             }
