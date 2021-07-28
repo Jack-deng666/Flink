@@ -1,4 +1,4 @@
-package com.jack;
+package com.jack.window;
 
 import com.jack.apiest.beans.SensorReading;
 import org.apache.flink.api.common.functions.AggregateFunction;
