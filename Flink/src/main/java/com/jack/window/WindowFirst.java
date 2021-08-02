@@ -27,6 +27,7 @@ public class WindowFirst {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
 
+
 //        DataStreamSource<String> inputData = env.socketTextStream("10.0.0.22", 5203);
 //        DataStream<SensorReading> dataStream = inputData.map(line -> {
 //            String[] field = line.split(",");
