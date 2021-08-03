@@ -7,6 +7,9 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrdernessTimestampExtractor;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.util.OutputTag;
+
+import java.io.OutputStream;
 
 /**
  * @author jack Deng
@@ -15,7 +18,7 @@ import org.apache.flink.streaming.api.windowing.time.Time;
  */
 public class WindowTime {
     public static void main(String[] args) throws Exception {
-//        new Sensor
+//
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // 设置时间语义 --时间时间
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
@@ -35,9 +38,15 @@ public class WindowTime {
             }
         });
         // 开窗
+
+        OutputTag<SensorReading> lateData = new OutputTag<SensorReading>("lateData"){};
         SingleOutputStreamOperator<SensorReading> minTempStream = timeDataStream.keyBy("id")
-                .timeWindow(Time.seconds(15)).minBy("temperature");
+                .timeWindow(Time.seconds(15)).
+                        allowedLateness(Time.minutes(1)) //设置迟到时间 一分钟
+                .sideOutputLateData(lateData)
+                        .minBy("temperature");
         minTempStream.print("");
+        minTempStream.getSideOutput(lateData).print("lata");
         env.execute();
 
 
