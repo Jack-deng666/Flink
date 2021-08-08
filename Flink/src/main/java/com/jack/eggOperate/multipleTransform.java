@@ -30,7 +30,7 @@ public class multipleTransform {
         SplitStream<SensorReading> splitData = mapRusult.split(new OutputSelector<SensorReading>() {
             @Override
             public Iterable<String> select(SensorReading value) {
-                return (value.getTempperature() > 35.0) ? Collections.singletonList("hight") :
+                return (value.gettemperature() > 35.0) ? Collections.singletonList("hight") :
                         Collections.singletonList("low");
             }
         });
@@ -47,7 +47,7 @@ public class multipleTransform {
 
             @Override
             public Tuple2<String, Double> map(SensorReading value) throws Exception {
-                return new Tuple2<>(value.getId(), value.getTempperature());
+                return new Tuple2<>(value.getId(), value.gettemperature());
             }
         });
 
@@ -62,7 +62,7 @@ public class multipleTransform {
 
             @Override
             public Tuple3<String,Double,  String> map2(SensorReading value) throws Exception {
-                return new Tuple3<>(value.getId(),value.getTempperature(),  "高温预警");
+                return new Tuple3<>(value.getId(),value.gettemperature(),  "高温预警");
             }
         });
 

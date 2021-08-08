@@ -5,15 +5,15 @@ package com.jack.apiest.beans;
 public class SensorReading {
     private String id;
     private  Long timestamp;
-    private Double tempperature;
+    private Double temperature;
 
     public SensorReading() {
     }
 
-    public SensorReading(String id, Long timestamp, Double tempperature) {
+    public SensorReading(String id, Long timestamp, Double temperature) {
         this.id = id;
         this.timestamp = timestamp;
-        this.tempperature = tempperature;
+        this.temperature = temperature;
     }
 
     public String getId() {
@@ -32,12 +32,12 @@ public class SensorReading {
         this.timestamp = timestamp;
     }
 
-    public Double getTempperature() {
-        return tempperature;
+    public Double gettemperature() {
+        return temperature;
     }
 
-    public void setTempperature(Double tempperature) {
-        this.tempperature = tempperature;
+    public void settemperature(Double temperature) {
+        this.temperature = temperature;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class SensorReading {
         return "SensorReading{" +
                 "id='" + id + '\'' +
                 ", timestamp=" + timestamp +
-                ", tempperature=" + tempperature +
+                ", temperature=" + temperature +
                 '}';
     }
 

@@ -44,6 +44,6 @@ class myRedisMapper implements RedisMapper<SensorReading>{
 
     @Override
     public String getValueFromData(SensorReading data) {
-        return data.getTempperature().toString();
+        return data.gettemperature().toString();
     }
 }

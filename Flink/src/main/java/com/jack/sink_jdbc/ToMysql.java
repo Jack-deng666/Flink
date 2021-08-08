@@ -40,12 +40,12 @@ public class ToMysql {
 
         @Override
         public void invoke(SensorReading value, Context context) throws Exception {
-            updateStatus.setDouble(1,value.getTempperature());
+            updateStatus.setDouble(1,value.gettemperature());
             updateStatus.setString(2,value.getId());
             updateStatus.execute();
             if (updateStatus.getUpdateCount() == 0){
                 insertStatus.setString(1,value.getId());
-                insertStatus.setDouble(2,value.getTempperature());
+                insertStatus.setDouble(2,value.gettemperature());
                 insertStatus.execute();
             }
         }
