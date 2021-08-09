@@ -17,3 +17,7 @@ public class MyTest {
         }
 
     }
+class dog{
+    public dog() {
+    }
+}

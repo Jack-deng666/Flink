@@ -9,8 +9,6 @@ import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrderness
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.util.OutputTag;
 
-import java.io.OutputStream;
-
 /**
  * @author jack Deng
  * @version 1.0
@@ -24,21 +22,20 @@ public class WindowTime {
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
         env.getConfig().setAutoWatermarkInterval(100);
 
-        DataStreamSource<String> inputStream = env.socketTextStream("10.0.0.39", 54321);
+        DataStreamSource<String> inputStream = env.socketTextStream("10.0.0.22", 54321);
         SingleOutputStreamOperator<SensorReading> dataStream = inputStream.map(line -> {
             String[] field = line.split(",");
             return new SensorReading(field[0], new Long(field[1]), new Double(field[2]));
         });
-        //设置乱序时间戳和watermask
+        //设置乱序时间戳和WaterMask
         SingleOutputStreamOperator<SensorReading> timeDataStream = dataStream.
-                assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.milliseconds(10)) {
+                assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.seconds(2)) {
             @Override
             public long extractTimestamp(SensorReading element) {
                 return element.getTimestamp() * 1000L;
             }
         });
-        // 开窗
-
+        // 是坚持到的最后期限
         OutputTag<SensorReading> lateData = new OutputTag<SensorReading>("lateData"){};
         SingleOutputStreamOperator<SensorReading> minTempStream = timeDataStream.keyBy("id")
                 .timeWindow(Time.seconds(15)).
