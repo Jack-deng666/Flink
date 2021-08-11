@@ -81,6 +81,14 @@
             <version>2.6.5</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-table-planner -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-table-planner_2.12</artifactId>
+            <version>1.10.1</version>
+            <scope>provided</scope>
+        </dependency>
+
 
     </dependencies>
 
