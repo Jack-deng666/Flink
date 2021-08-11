@@ -13,35 +13,38 @@ import org.apache.flink.types.Row;
  * @version 1.0
  * @date 2021/8/11 19:37
  */
+
+/**
+ * 通过流处理创建表
+ */
 public class table_test {
     public static void main(String[] args) throws Exception {
         //  引入流失处理环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // 设置并行度
-//        env.setParallelism(1);
+        env.setParallelism(1);
         // 读取数据
-        DataStreamSource<String> inputData = env.readTextFile("F:\\LoadPinnacle\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
+        DataStreamSource<String> inputData = env.readTextFile("F:\\RoadPinnacle\\Flink\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
         // 将数据打包成指定格式
         SingleOutputStreamOperator<SensorReading> dataStream = inputData.map(line -> {
             String[] field = line.split(",");
             return new SensorReading(field[0], new Long(field[1]), new Double(field[2]));
         });
-//        dataStream.print();
-        StreamTableEnvironment streamTableEnvironment = StreamTableEnvironment.create(env);
-//         设置table环境
-//        StreamTableEnvironment TableEnv = StreamTableEnvironment.create(env);
+
+        //    设置table环境
+        StreamTableEnvironment TableEnv = StreamTableEnvironment.create(env);
         // 创建一张表
-        Table tableData = streamTableEnvironment.fromDataStream(dataStream);
+        Table tableData = TableEnv.fromDataStream(dataStream);
 
         // 对表进行操作
         Table tableResult1 = tableData.select("id, temperature").where("id='sensor_1'");
         // 执行sql
-        streamTableEnvironment.createTemporaryView("sensor", dataStream);
+        TableEnv.createTemporaryView("sensor", dataStream);
         String sql = "select id, temperature from sensor where id='sensor_2'";
-        Table tableResult2 = streamTableEnvironment.sqlQuery(sql);
+        Table tableResult2 = TableEnv.sqlQuery(sql);
         // 将数据再转成流数据 在输出
-        streamTableEnvironment.toAppendStream(tableResult1, Row.class).print("table");
-        streamTableEnvironment.toAppendStream(tableResult2, Row.class).print("sql");
+        TableEnv.toAppendStream(tableResult1, Row.class).print("table");
+        TableEnv.toAppendStream(tableResult2, Row.class).print("sql");
 
         env.execute();
 
