@@ -33,7 +33,7 @@ public class ToMysql {
         PreparedStatement updateStatus = null;
         @Override
         public void open(Configuration parameters) throws Exception {
-            Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb","root","root");
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/mydb","root","root");
             insertStatus = connection.prepareStatement("insert into sensor_temp (id, temperature) values (?,?)");
             updateStatus = connection.prepareStatement("update sensor_temp set temperature = ? where id = ?");
         }

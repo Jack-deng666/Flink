@@ -11,6 +11,8 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
 
+import java.io.IOException;
+
 /**
  * @author jack Deng
  * @version 1.0
@@ -78,5 +80,7 @@ public class tempWarn {
             out.collect("传感器" + ctx.getCurrentKey().getField(0)+"发生"+interval+"s温度连续上升报警");
             timerTsState.clear();
         }
+
+
     }
 }

@@ -6,7 +6,8 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
-public class MyTest {
+public class connKafka {
+
 
         public static void main(String[] args) throws InterruptedException, ExecutionException {
             Properties pro = new Properties();
@@ -17,7 +18,3 @@ public class MyTest {
         }
 
     }
-class dog{
-    public dog() {
-    }
-}
