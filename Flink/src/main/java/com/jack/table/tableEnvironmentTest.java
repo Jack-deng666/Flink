@@ -65,6 +65,10 @@ public class tableEnvironmentTest {
         Table filterResult = inputData.select("id,temp").filter("id='sensor_3'");
         Table groupResult = inputData.groupBy("id").select("id, id.count as cnt, temp.avg as temp__avg");
         Table sqlGroupResult = tableEnv.sqlQuery("select id, count(id) cnt, avg(temp) avg_temp from inputData group by id");
+        /**
+         * 追加模式(toAppendStream)：只有在动态Table仅通过INSERT更改修改时才能使用此模式，即它仅附加，并且以前发出的结果永远不会更新。
+         * 缩进模式(toRetractStream)：始终可以使用此模式。返回值是boolean类型。它用true或false来标记数据的插入和撤回，返回true代表数据插入，false代表数据的撤回
+         */
         tableEnv.toAppendStream(filterResult, Row.class).print("filterResult");
         tableEnv.toRetractStream(groupResult, Row.class).print("table_egg");
         tableEnv.toRetractStream(sqlGroupResult, Row.class).print("sqlGroupResult");
