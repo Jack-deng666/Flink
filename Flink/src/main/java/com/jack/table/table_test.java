@@ -31,7 +31,7 @@ public class table_test {
             return new SensorReading(field[0], new Long(field[1]), new Double(field[2]));
         });
 
-        //    设置table环境
+        // 设置table环境
         StreamTableEnvironment TableEnv = StreamTableEnvironment.create(env);
         // 创建一张表
         Table tableData = TableEnv.fromDataStream(dataStream);
@@ -47,6 +47,5 @@ public class table_test {
         TableEnv.toAppendStream(tableResult2, Row.class).print("sql");
 
         env.execute();
-
     }
 }
