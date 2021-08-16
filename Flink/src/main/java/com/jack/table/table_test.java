@@ -24,7 +24,7 @@ public class table_test {
         // 设置并行度
         env.setParallelism(1);
         // 读取数据
-        DataStreamSource<String> inputData = env.readTextFile("F:\\RoadPinnacle\\Flink\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
+        DataStreamSource<String> inputData = env.readTextFile("F:\\LoadPinnacle\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
         // 将数据打包成指定格式
         SingleOutputStreamOperator<SensorReading> dataStream = inputData.map(line -> {
             String[] field = line.split(",");
