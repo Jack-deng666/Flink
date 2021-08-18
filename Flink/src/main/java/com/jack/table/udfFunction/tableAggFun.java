@@ -24,7 +24,7 @@ public class tableAggFun {
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
         env.setParallelism(1);
         // 流式读取数据
-        DataStreamSource<String> inputData = env.readTextFile("F:\\LoadPinnacle\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
+        DataStreamSource<String> inputData = env.readTextFile("F:\\RoadPinnacle\\Flink\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
         SingleOutputStreamOperator<SensorReading> StreamData = inputData.map(line -> {
             String[] split = line.split(",");
             return new SensorReading(split[0], new Long(split[1]), new Double(split[2]));
