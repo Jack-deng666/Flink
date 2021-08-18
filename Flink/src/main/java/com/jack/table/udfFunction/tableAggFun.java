@@ -9,18 +9,19 @@ import org.apache.flink.table.api.Table;
 import org.apache.flink.table.api.java.StreamTableEnvironment;
 import org.apache.flink.table.functions.TableAggregateFunction;
 import org.apache.flink.types.Row;
+import org.apache.flink.util.Collector;
 
 import java.util.Collections;
 import java.util.HashMap;
 
 public class tableAggFun {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         // 创建环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
         env.setParallelism(1);
         // 流式读取数据
-        DataStreamSource<String> inputData = env.readTextFile("F:\\RoadPinnacle\\Flink\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
+        DataStreamSource<String> inputData = env.readTextFile("F:\\LoadPinnacle\\Flink\\Flink\\src\\main\\resources\\sensor.txt");
         SingleOutputStreamOperator<SensorReading> StreamData = inputData.map(line -> {
             String[] split = line.split(",");
             return new SensorReading(split[0], new Long(split[1]), new Double(split[2]));
@@ -30,12 +31,13 @@ public class tableAggFun {
         // 流式数据转成表
         Table tableData = tableEnv.fromDataStream(StreamData, "id, timestamp,temperature");
         Table id = tableData.groupBy("id")
-                .flatAggregate("tempTop(temperature) as temp1, temp2")
-                .select("id, temp1, temp2");
+                .flatAggregate("tempTop(temperature) as (tempOne, rank)")
+                .select("id, tempOne, rank");
         tableEnv.toRetractStream(id, Row.class).print();
+        env.execute();
 
     }
-    public static class tableAggregate extends TableAggregateFunction<Tuple2<Double,Double>, HashMap<String, Double>>{
+        public static class tableAggregate extends TableAggregateFunction<Tuple2<Double,Integer>, HashMap<String, Double>>{
 
         @Override
         public HashMap<String, Double> createAccumulator() {
@@ -51,13 +53,24 @@ public class tableAggFun {
             if(temp>tempTop1){
                 hashMap.replace("tempTop1", temp);
             }
-            else  if (temp>tempTop2){
+            else if(temp>tempTop2){
                 hashMap.replace("tempTop2", temp);
             }
         }
-        public static void emitValue(HashMap<String, Double> hashMap, Tuple2<Double,Double> out){
-            out.f0 = hashMap.get("tempTop1");
-            out.f1 = hashMap.get("tempTop2");
+
+        public void merge(HashMap<String, Double> hash,java.lang.Iterable<HashMap<String, Double>> iterable){
+                for(HashMap<String, Double> h: iterable){
+                    accumulate(hash, h.get("tempTop1"));
+                    accumulate(hash, h.get("tempTop2"));
+                }
+        }
+        public static void emitValue(HashMap<String, Double> hashMap, Collector<Tuple2<Double, Integer>> out){
+            if (hashMap.get("tempTop1") != 0.0){
+                out.collect(new Tuple2<>(hashMap.get("tempTop1"), 1));
+            }
+            if (hashMap.get("tempTop2") != 0.0){
+                out.collect(new Tuple2<>(hashMap.get("tempTop2"), 2));
+            }
         }
     }
 }
