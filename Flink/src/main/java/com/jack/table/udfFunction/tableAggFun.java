@@ -14,6 +14,9 @@ import org.apache.flink.util.Collector;
 import java.util.Collections;
 import java.util.HashMap;
 
+/**
+ * 参照官网的例子：https://ci.apache.org/projects/flink/flink-docs-release-1.13/zh/docs/dev/table/tableapi/
+ */
 public class tableAggFun {
     public static void main(String[] args) throws Exception {
         // 创建环境
