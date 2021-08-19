@@ -1,6 +1,4 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.*;
 
 /**
  * @author jack Deng
@@ -11,23 +9,19 @@ public class testDemo {
     public char[] empty;
     public static void main(String[] args) {
 
-        //        for (int i=0;i<256;i++)
-        //            for (int j =0;j<256;j++) {
-        //                String temp_string = String.valueOf(i) + String.valueOf(j);
-        //                System.out.println(temp_string+" "+temp_string.hashCode());
-        //          }
-        char[] temp = {'a', 'b'};
-        String str = new String(temp);
-        System.out.println(str);
-        char [] result = str.toCharArray();
-        System.out.println(result);
+        ArrayList<String> strings = new ArrayList<>();
+        strings.add("wq");
+        String s = strings.get(1);
+        Iterator<String> iterator = strings.iterator();
 
-        HashMap<String, Integer> hashmap = new HashMap<>();
-        hashmap.put("dengjirui",666);
-        Integer dengjirui = hashmap.get("dengjirui");
-        System.out.println(dengjirui);
-        System.out.println(hashmap);
-        System.out.println(hashmap.containsValue(666));
+        LinkedList<Integer> integers = new LinkedList<>();
+        integers.add(1);
+        Integer integer = integers.get(1);
+
+        HashSet<String> hashset = new HashSet<>();
+        hashset.add("we");
+        hashset.add("we");
+        hashset.add("wa");
 
     }
 }
