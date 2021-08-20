@@ -25,6 +25,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 /**
  * @author jack Deng
@@ -35,6 +36,8 @@ import java.util.Iterator;
  */
 public class HotItems {
     public static void main(String[] args) throws Exception{
+
+
         // 创建环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         // 设置并行度
@@ -42,7 +45,7 @@ public class HotItems {
         // 设置时间语义
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        DataStreamSource<String> inputData = env.readTextFile("F:\\RoadPinnacle\\Flink\\Flink\\HotItemsAnalysis\\src\\main\\resources\\UserBehavior.csv");
+        DataStreamSource<String> inputData = env.readTextFile("F:\\LoadPinnacle\\Flink\\HotItemsAnalysis\\src\\main\\resources\\UserBehavior.csv");
 
         SingleOutputStreamOperator<UserBehavior> streamData = inputData.map(new MapFunction<String, UserBehavior>() {
             @Override
@@ -61,16 +64,14 @@ public class HotItems {
         });
 
         SingleOutputStreamOperator<ItemViewCount> hotItemResult = streamData
-                .filter(line -> "pv".equals(line.getBehavior()))
-                .keyBy("itemsId")
-                .timeWindow(Time.hours(1), Time.minutes(5))
-                .aggregate(new ItemCountAgg(), new WindowItemCountResult());
+                .filter(line -> "pv".equals(line.getBehavior()))        // 过滤数据
+                .keyBy("itemsId")                               // 商品分组
+                .timeWindow(Time.hours(1), Time.minutes(5))             // 滑动窗口
+                .aggregate(new ItemCountAgg(), new WindowItemCountResult()); //增量聚合 全窗口函数
 
         SingleOutputStreamOperator<String> topResult = hotItemResult.keyBy("windowEnd").process(new MyProcess(5));
         topResult.print();
         env.execute("热门商品");
-
-
     }
 
     public static class ItemCountAgg implements AggregateFunction<UserBehavior,Long, Long>{

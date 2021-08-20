@@ -1,3 +1,6 @@
+import org.apache.flink.shaded.com.google.common.collect.Lists;
+
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -22,6 +25,5 @@ public class testDemo {
         hashset.add("we");
         hashset.add("we");
         hashset.add("wa");
-
     }
 }
