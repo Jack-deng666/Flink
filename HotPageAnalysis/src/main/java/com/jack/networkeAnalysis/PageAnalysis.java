@@ -6,6 +6,8 @@ import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.state.ListState;
 import org.apache.flink.api.common.state.ListStateDescriptor;
+import org.apache.flink.api.common.state.MapState;
+import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.TimeCharacteristic;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;
@@ -18,11 +20,14 @@ import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.util.Collector;
+import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
+import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
 
 public class PageAnalysis {
 
@@ -32,8 +37,10 @@ public class PageAnalysis {
         //设置时间语义
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-        URL resource = PageAnalysis.class.getResource("/apache.log");
-        DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
+//        URL resource = PageAnalysis.class.getResource("/apache.log");
+//        DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
+
+        DataStreamSource<String> inputData = env.socketTextStream("192.168.254.129", 50000);
         SingleOutputStreamOperator<UserView> dataStream = inputData.map(line -> {
             String[] fields = line.split(" ");
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/yy/yyyy:HH:mm:ss");
@@ -46,18 +53,20 @@ public class PageAnalysis {
                 return element.getTimeStamp();
             }
         });
-//        dataStream.print();
+//        dataStream.print("resource-data");
+        OutputTag<UserView> hotPageCountOutputTag = new OutputTag<UserView>("late-data"){};
         SingleOutputStreamOperator<HotPageCount> aggResult = dataStream
                 .filter(line->"GET".equals(line.getMethod()))
                 .keyBy(UserView::getUrl)
                 .timeWindow(Time.minutes(10), Time.seconds(5))
                 .allowedLateness(Time.minutes(1))
+                .sideOutputLateData(hotPageCountOutputTag)
                 .aggregate(new MyAgg(), new MyWin());
-//        aggResult.print();
+        aggResult.print("agg");
         SingleOutputStreamOperator<String> dataResult = aggResult.keyBy(HotPageCount::getWindowEnd)
                 .process(new ProFun(3));
-
-        dataResult.print();
+        dataResult.getSideOutput(hotPageCountOutputTag).print("late");
+        dataResult.print("data");
         env.execute();
     }
 
@@ -99,45 +108,67 @@ public class PageAnalysis {
         public ProFun(Integer topSize) {
             TopSize = topSize;
         }
-        ListState<HotPageCount> listState;
+//        ListState<HotPageCount> listState;
+        MapState<String, Integer> pageViewCountMapState;
         @Override
         public void open(Configuration parameters) throws Exception {
-            ListStateDescriptor<HotPageCount> hotPageCountListStateDescriptor =
-                    new ListStateDescriptor<>("list-state", HotPageCount.class);
-            listState = getRuntimeContext().getListState(hotPageCountListStateDescriptor);
+//            ListStateDescriptor<HotPageCount> hotPageCountListStateDescriptor =
+//                    new ListStateDescriptor<>("list-state", HotPageCount.class);
+//            listState = getRuntimeContext().getListState(hotPageCountListStateDescriptor);
+
+            pageViewCountMapState = getRuntimeContext().getMapState(
+                    new MapStateDescriptor<String, Integer>("page-map-state",String.class, Integer.class));
+
         }
 
         @Override
         public void processElement(HotPageCount value, Context ctx, Collector<String> out) throws Exception {
-            listState.add(value);
+            pageViewCountMapState.put(value.getUrl(), value.getCount());
+//            listState.add(value);
+            // 输出表单定时器
             ctx.timerService().registerEventTimeTimer(value.getWindowEnd()+1);
+            // 注册清空状态定时器
+            ctx.timerService().registerEventTimeTimer(value.getWindowEnd()+ 60 * 1000L);
         }
 
         @Override
         public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
-            ArrayList<HotPageCount> hotPageCounts = Lists.newArrayList(listState.get().iterator());
-            hotPageCounts.sort(new Comparator<HotPageCount>() {
+
+            /*
+            在多定时器的情况下， 判断执行那个定时器的方法是根据定时器时间，
+            所以这里 两个定时器区分的是 ： 判断时间
+
+             */
+            // windowEnd ： 我们最后一个窗口是对windowEnd分组， 过意这个直接getCurrentKey即可
+            //如果60s定时器 直接情况数据
+            if (timestamp == ctx.getCurrentKey()+60*1000L){
+              pageViewCountMapState.clear();
+              return;
+            }
+
+            ArrayList<Map.Entry<String, Integer>> pageViewCount = Lists.newArrayList(pageViewCountMapState.entries().iterator());
+
+            pageViewCount.sort(new Comparator<Map.Entry<String, Integer>>() {
                 @Override
-                public int compare(HotPageCount o1, HotPageCount o2) {
-                    // 大于-1 表示不作操作
-                    return o2.getCount().compareTo(o1.getCount());
+                public int compare(Map.Entry<String, Integer> o1, Map.Entry<String, Integer> o2) {
+                    return o2.getValue().compareTo(o1.getValue());
                 }
             });
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("=========================================\n");
-            stringBuilder.append("当前窗口时间为").append(timestamp-1).append("\n");
-            int i = 0;
-            for(i++; i<Math.min(hotPageCounts.size(),TopSize);i++){
-                HotPageCount hotPageCount = hotPageCounts.get(i);
+            stringBuilder.append("当前窗口时间为").append(new Timestamp(timestamp-1)).append("\n");
+
+            for(int i = 0; i<Math.min(pageViewCount.size(),TopSize);i++){
+                Map.Entry<String, Integer> currentItemViewCount = pageViewCount.get(i);
                 (stringBuilder.append("NO: Top").append(i + 1).append(" url :")
-                        .append(hotPageCount.getUrl()))
+                        .append(currentItemViewCount.getKey()))
                         .append("; 游览量为:")
-                        .append(hotPageCount.getCount()).append("\n");
+                        .append(currentItemViewCount.getValue()).append("\n");
             }
             stringBuilder.append("=========================================\n\n");
-
-            out.collect(stringBuilder.toString());
             Thread.sleep(1000);
+            out.collect(stringBuilder.toString());
+            pageViewCountMapState.clear();
 
         }
     }
