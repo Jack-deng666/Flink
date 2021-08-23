@@ -40,7 +40,7 @@ public class PageAnalysis {
 //        URL resource = PageAnalysis.class.getResource("/apache.log");
 //        DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
 
-        DataStreamSource<String> inputData = env.socketTextStream("192.168.254.129", 50000);
+        DataStreamSource<String> inputData = env.socketTextStream("10.0.0.22", 50000);
         SingleOutputStreamOperator<UserView> dataStream = inputData.map(line -> {
             String[] fields = line.split(" ");
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/yy/yyyy:HH:mm:ss");
@@ -53,8 +53,10 @@ public class PageAnalysis {
                 return element.getTimeStamp();
             }
         });
-//        dataStream.print("resource-data");
+//        dataStream.print("data");
+
         OutputTag<UserView> hotPageCountOutputTag = new OutputTag<UserView>("late-data"){};
+
         SingleOutputStreamOperator<HotPageCount> aggResult = dataStream
                 .filter(line->"GET".equals(line.getMethod()))
                 .keyBy(UserView::getUrl)
@@ -63,11 +65,13 @@ public class PageAnalysis {
                 .sideOutputLateData(hotPageCountOutputTag)
                 .aggregate(new MyAgg(), new MyWin());
         aggResult.print("agg");
-        SingleOutputStreamOperator<String> dataResult = aggResult.keyBy(HotPageCount::getWindowEnd)
+        aggResult.getSideOutput(hotPageCountOutputTag).print("late-data");
+        SingleOutputStreamOperator<String> dataResult = aggResult
+                .keyBy(HotPageCount::getWindowEnd)
                 .process(new ProFun(3));
-        dataResult.getSideOutput(hotPageCountOutputTag).print("late");
-        dataResult.print("data");
-        env.execute();
+
+        dataResult.print();
+        env.execute("hot pages job");
     }
 
     public static class MyAgg implements AggregateFunction<UserView, Integer, Integer> {
@@ -166,9 +170,9 @@ public class PageAnalysis {
                         .append(currentItemViewCount.getValue()).append("\n");
             }
             stringBuilder.append("=========================================\n\n");
-            Thread.sleep(1000);
+//            Thread.sleep(1000);
             out.collect(stringBuilder.toString());
-            pageViewCountMapState.clear();
+//            pageViewCountMapState.clear();
 
         }
     }
