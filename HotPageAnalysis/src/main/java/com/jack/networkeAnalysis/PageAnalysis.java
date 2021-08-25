@@ -37,10 +37,10 @@ public class PageAnalysis {
         //设置时间语义
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
-//        URL resource = PageAnalysis.class.getResource("/apache.log");
-//        DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
+        URL resource = PageAnalysis.class.getResource("/apache.log");
+        DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
 
-        DataStreamSource<String> inputData = env.socketTextStream("10.0.0.22", 50000);
+//        DataStreamSource<String> inputData = env.socketTextStream("10.0.0.22", 50000);
         SingleOutputStreamOperator<UserView> dataStream = inputData.map(line -> {
             String[] fields = line.split(" ");
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/yy/yyyy:HH:mm:ss");
