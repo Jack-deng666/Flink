@@ -54,6 +54,7 @@
         <module>hdfs</module>
         <module>HotItemsAnalysis</module>
         <module>HotPageAnalysis</module>
+        <module>MarketStatistic</module>
     </modules>
 
 </project>
