@@ -49,7 +49,7 @@ public class AdClick {
                 return new Tuple2<Long, Long>(value.getUserId(), value.getAdId());
             }
         })
-                .process(new MyProFun(99));
+                .process(new MyProFun(2));
 
         SingleOutputStreamOperator<AdCountViewByProvince> aggregate = process
                 .keyBy(AdClickBehavior::getProvince)
@@ -76,7 +76,7 @@ public class AdClick {
 
         @Override
         public void open(Configuration parameters) throws Exception {
-            countState = getRuntimeContext().getState(new ValueStateDescriptor<Long>("count-click", Long.class,0L));
+            countState = getRuntimeContext().getState(new ValueStateDescriptor<Long>("count-click", Long.class,1L));
             isSentSate = getRuntimeContext().getState(new ValueStateDescriptor<Boolean>("send-back-list", Boolean.class,false));
         }
 
