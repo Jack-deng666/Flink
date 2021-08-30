@@ -1,7 +1,10 @@
 package com.jack.marketanalysis;
 
 import com.jack.beans.AdClickBehavior;
+import com.jack.beans.AdCountViewByProvince;
 import com.jack.beans.BlackListUserWarning;
+import com.jack.beans.ChannelPromotionCount;
+import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.java.functions.KeySelector;
@@ -13,18 +16,21 @@ import org.apache.flink.streaming.api.datastream.SingleOutputStreamOperator;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.streaming.api.functions.timestamps.AscendingTimestampExtractor;
+import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
+import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
 import java.net.URL;
+import java.sql.Timestamp;
 
 public class AdClick {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
         env.setParallelism(1);
         env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
-        URL resource = AdClick.class.getResource("/AdClickLog");
+        URL resource = AdClick.class.getResource("/AdClickLog.csv");
         DataStreamSource<String> inputData = env.readTextFile(resource.getPath());
 
         SingleOutputStreamOperator<AdClickBehavior> dataStream = inputData.map(line -> {
@@ -43,11 +49,17 @@ public class AdClick {
                 return new Tuple2<Long, Long>(value.getUserId(), value.getAdId());
             }
         })
-                .process(new MyProFun(100));
+                .process(new MyProFun(99));
 
-        process
+        SingleOutputStreamOperator<AdCountViewByProvince> aggregate = process
                 .keyBy(AdClickBehavior::getProvince)
-                .timeWindow(Time.hours(1),Time.seconds(5)).aggregate()
+                .timeWindow(Time.hours(1), Time.seconds(5))
+                .aggregate(new MyProFun2(), new MyWinFun());
+
+        aggregate.print("click");
+        process.getSideOutput(new OutputTag<BlackListUserWarning>("blacklist"){})
+                .print("warning");
+        env.execute();
 
     }
 
@@ -69,12 +81,6 @@ public class AdClick {
         }
 
 
-
-        @Override
-        public void close() throws Exception {
-            super.close();
-        }
-
         @Override
         public void processElement(AdClickBehavior value, Context ctx, Collector<AdClickBehavior> out) throws Exception {
             // 判断当前用户对同一广告的点击次数，如果不够上限，该count加1正常输出；
@@ -95,11 +101,11 @@ public class AdClick {
                     ctx.output(new OutputTag<BlackListUserWarning>("blacklist"){},
                             new BlackListUserWarning(value.getUserId(), value.getAdId(), "click over " + superBound + "times."));
                 }
-                return;
             }
-            // 没出现阈值
-            countState.update(countClick+1);
-            out.collect(value);
+            else {
+                countState.update(countClick + 1);
+                out.collect(value);
+            }
 
         }
 
@@ -107,6 +113,38 @@ public class AdClick {
         public void onTimer(long timestamp, OnTimerContext ctx, Collector<AdClickBehavior> out) throws Exception {
             countState.clear();
             isSentSate.clear();
+        }
+    }
+
+    public static class MyProFun2 implements AggregateFunction<AdClickBehavior,Long,Long>{
+        @Override
+        public Long createAccumulator() {
+            return 0L;
+        }
+
+        @Override
+        public Long add(AdClickBehavior value, Long accumulator) {
+            return accumulator+1;
+        }
+
+        @Override
+        public Long getResult(Long accumulator) {
+            return accumulator;
+        }
+
+        @Override
+        public Long merge(Long a, Long b) {
+            return a+b;
+        }
+    }
+
+    public static class MyWinFun implements WindowFunction<Long, AdCountViewByProvince, String, TimeWindow>{
+
+        @Override
+        public void apply(String s, TimeWindow window, Iterable<Long> input, Collector<AdCountViewByProvince> out) throws Exception {
+            String ts = new Timestamp(window.getEnd()).toString();
+            out.collect(new AdCountViewByProvince(s, ts, input.iterator().next()));
+
         }
     }
 }

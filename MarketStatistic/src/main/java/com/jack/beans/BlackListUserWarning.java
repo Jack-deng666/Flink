@@ -19,6 +19,7 @@ public class BlackListUserWarning {
         this.warningMsg = warningMsg;
     }
 
+
     @Override
     public String toString() {
         return "BlackListUserWarning{" +
