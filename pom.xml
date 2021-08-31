@@ -55,6 +55,8 @@
         <module>HotItemsAnalysis</module>
         <module>HotPageAnalysis</module>
         <module>MarketStatistic</module>
+        <module>LoginFail</module>
+        <module>OrderPayDetect</module>
     </modules>
 
 </project>
