@@ -1,4 +1,4 @@
-package com.jack.beans.orderpay;
+package com.jack.orderpay;
 import com.jack.beans.OrderEvent;
 import com.jack.beans.OrderResult;
 import org.apache.flink.cep.CEP;

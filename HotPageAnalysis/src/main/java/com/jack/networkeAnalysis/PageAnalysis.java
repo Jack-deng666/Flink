@@ -1,11 +1,9 @@
 package com.jack.networkeAnalysis;
 
-import com.jack.beans.HotPageCount;
-import com.jack.beans.UserView;
+import com.jack.HotPageCount;
+import com.jack.UserView;
 import org.apache.commons.compress.utils.Lists;
 import org.apache.flink.api.common.functions.AggregateFunction;
-import org.apache.flink.api.common.state.ListState;
-import org.apache.flink.api.common.state.ListStateDescriptor;
 import org.apache.flink.api.common.state.MapState;
 import org.apache.flink.api.common.state.MapStateDescriptor;
 import org.apache.flink.configuration.Configuration;
@@ -18,7 +16,6 @@ import org.apache.flink.streaming.api.functions.timestamps.BoundedOutOfOrderness
 import org.apache.flink.streaming.api.functions.windowing.WindowFunction;
 import org.apache.flink.streaming.api.windowing.time.Time;
 import org.apache.flink.streaming.api.windowing.windows.TimeWindow;
-import org.apache.flink.table.api.EnvironmentSettings;
 import org.apache.flink.util.Collector;
 import org.apache.flink.util.OutputTag;
 
@@ -66,6 +63,7 @@ public class PageAnalysis {
                 .aggregate(new MyAgg(), new MyWin());
         aggResult.print("agg");
         aggResult.getSideOutput(hotPageCountOutputTag).print("late-data");
+
         SingleOutputStreamOperator<String> dataResult = aggResult
                 .keyBy(HotPageCount::getWindowEnd)
                 .process(new ProFun(3));
@@ -173,7 +171,6 @@ public class PageAnalysis {
 //            Thread.sleep(1000);
             out.collect(stringBuilder.toString());
 //            pageViewCountMapState.clear();
-
         }
     }
 }

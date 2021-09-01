@@ -3,7 +3,6 @@ package com.jack.marketanalysis;
 import com.jack.beans.AdClickBehavior;
 import com.jack.beans.AdCountViewByProvince;
 import com.jack.beans.BlackListUserWarning;
-import com.jack.beans.ChannelPromotionCount;
 import org.apache.flink.api.common.functions.AggregateFunction;
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -60,7 +59,6 @@ public class AdClick {
         process.getSideOutput(new OutputTag<BlackListUserWarning>("blacklist"){})
                 .print("warning");
         env.execute();
-
     }
 
     public static class MyProFun extends KeyedProcessFunction<Tuple2<Long, Long> ,AdClickBehavior,AdClickBehavior>{

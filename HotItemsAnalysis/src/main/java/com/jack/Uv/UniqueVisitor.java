@@ -37,6 +37,7 @@ public class UniqueVisitor {
                 return element.getTimeStamp()*1000L;
             }
         });
+
         SingleOutputStreamOperator<ItemViewCount> resultData = dataStream
                 .filter(data -> "pv".equals(data.getBehavior()))
                 .timeWindowAll(Time.hours(1))

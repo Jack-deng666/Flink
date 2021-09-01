@@ -1,4 +1,4 @@
-package com.jack.beans;
+package com.jack;
 
 public class UserView {
     private String ip;

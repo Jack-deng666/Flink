@@ -1,4 +1,4 @@
-package com.jack.hotitems;
+package com.jack.Pv;
 
 import com.jack.beans.ItemViewCount;
 import com.jack.beans.UserBehavior;

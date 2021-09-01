@@ -17,7 +17,6 @@ import org.apache.flink.util.Collector;
 import redis.clients.jedis.Jedis;
 
 import java.net.URL;
-import java.util.List;
 
 public class UvWithBloomFilter {
     public static void main(String[] args) throws Exception {
@@ -117,8 +116,10 @@ public class UvWithBloomFilter {
         public void process(Context context, Iterable<UserBehavior> elements, Collector<ItemViewCount> out) throws Exception {
             Long userId = elements.iterator().next().getUserId();
             String userName = userId.toString();
+
             Long windowEnd = context.window().getEnd();
             String CountKey = windowEnd.toString();
+
             String CountHashName = "uv_count";
 
             Long offset = myBloomFilter.hashMap(userName, 61);
